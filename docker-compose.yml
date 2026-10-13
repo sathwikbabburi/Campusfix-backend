@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # 1. MySQL 8.0 Database Container
+  mysqldb:
+    image: mysql:8.0
+    container_name: campusfix_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password123
+      MYSQL_DATABASE: campusfix_db
+      MYSQL_USER: campusfix_user
+      MYSQL_PASSWORD: password123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campusfix_net
+
+  # 2. Spring Boot 3 Backend Container
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campusfix_backend
+    restart: always
+    depends_on:
+      mysqldb:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: mysql
+      MYSQL_HOST: mysqldb
+      MYSQL_PORT: 3306
+      MYSQL_DB: campusfix_db
+      MYSQL_USER: campusfix_user
+      MYSQL_PASSWORD: password123
+      APP_JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    ports:
+      - "8080:8080"
+    networks:
+      - campusfix_net
+
+  # 3. React 19 Frontend Container
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: campusfix_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - campusfix_net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  campusfix_net:
+    driver: bridge

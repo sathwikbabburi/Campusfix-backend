@@ -1,0 +1,70 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: campusfix-backend
+
+  # MySQL Database Configuration
+  datasource:
+    url: jdbc:mysql://localhost:3306/campusfix_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: admin@123
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # In-memory caching for Week 9-10
+  cache:
+    type: simple
+    cache-names:
+      - dashboardStats
+      - categoriesList
+      - activeAnnouncements
+
+# Security & JWT Configuration (Week 5-6)
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000 # 24 Hours
+  cors:
+    allowed-origins: "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
+
+# AI Configuration (Week 7-8: Pluggable LLM Key or Built-in Intelligent NLP Engine)
+ai:
+  provider: ${AI_PROVIDER:internal}
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    model: gemini-1.5-flash
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    model: gpt-3.5-turbo
+
+# Actuator Metrics (Week 9-10)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger OpenAPI docs (Week 13-14)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
